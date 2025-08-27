@@ -1,81 +1,50 @@
 const express = require("express");
+const connectDB =require("./config/database")
 const app = express();
+const User = require("./models/user")
 
-// app.use("/",(req,res)=>{
-//   res.send("heloo i am here")
-// })
-
-
-// app.use("/hello",(req,res)=>{
-//   res.send("helo helo helo");
-// })
-
-// app.use("/helo",(req,res)=>{
-//   res.send("inside helo");
-// })
-//
-
-//tthe order matters if i do then this will give me the hahah no matter what api call iam making   main koi se bhi api call kru mujhe sirf hahaha he milega 
-
-// app.use("/",(req,res)=>{
-//   res.send("hahaha");
-// })
-
-//this method will only match, get api calls to the rout /user
-
-// app.get("/user",(req,res)=>{
-//   res.send({firstname :"Siddharth", lastname:"Kasera"})
-// })
-
-// app.post("/user",(req,res)=>{
-//   res.send("data is successfually send");
-// })
-
-// app.delete("/user",(req,res)=>{
-// res.send("data deleted");
-// })
+app.use(express.json());
+/*
+// app.post("/signup", async (req, res) =>{
+//   //creating a new instance
+//   const user = new User({
+//     firstName: "sachin",
+//     lastName: "tandulkar",
+//     email: "sachhin@kiyoma.com",
+//     password:"sachin@123"
+//    // i want this data to be send inside the api while i am making post call
+//    //is data ko api ke through sed krna hai aur server pr lana hai 
+//   });
+*/
 
 
-// app.use("/test",(req,res)=>{
-//   res.send("tessssting");
-// })
 
-// app.get ("/a/",(req, res)=>{
-//   res.send({Firstname:"Sidd",Lastname:"kas"});
-// })
-
-//this is how you read the querry perameters
-//in postman http://localhost:3000/user?userid=101&technic= mart 
-//& this is using for adding more
-app.get ("/user",(req, res)=>{
-  console.log(req.query)
-  res.send({Firstname:"Sidd",Lastname:"kas"});
-})
-
-// now how to handel this 
-//how to get the user id 
-//user perams to get the user id 
-//http://localhost:3000/user/707 if you hit the send so you get the userid 
-// app.get("/user/:userid",(req,res)=>{
-//   console.log(req.params );
-//   res.send({FN:"shin",LM:"kuma"})
-// })
-
-//http://localhost:3000/user/707/Shin
-app.get("/user/:userid/:name/",(req,res)=>{
-  console.log(req.params );
-  res.send({FN:"shin",LM:"kuma"})
-})
-
-app.get("/user",(req,res)=>{
-  console.log(query)
-  res.send({FN:"shin",LM:"kuma"})
-})
+app.post("/signup", async (req, res) =>{
+  //creating a new instance
+  //remember use captail U
+ const user = new User(req.body);
 
 
-app.listen(3000,()=>{
+  try{
+  await user.save();
+  res.send("user added successfully");
+  }catch(err){
+   res.status(400).send("Error saving the user");
+  }
+});
+
+connectDB()
+
+  .then(()=>{
+    console.log("database is established")
+    app.listen(3000,()=>{
   console.log("here is the serve");
 });
+  }).catch(()=>{
+    console.error("database is not established")
+  })
+
+
 
 
 
