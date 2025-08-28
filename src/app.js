@@ -18,7 +18,7 @@ app.use(express.json());
 */
 
 
-/*
+
 app.post("/signup", async (req, res) =>{
   //creating a new instance
   //remember use captail U
@@ -31,7 +31,7 @@ app.post("/signup", async (req, res) =>{
   }catch(err){
    res.status(400).send("Error saving the user");
   }
-});*/
+});
 
 
 //try to find out by the one element
@@ -98,10 +98,15 @@ app.patch("/user",async(req,res)=>{
   const data = req.body;
   console.log(data);
   try{
-  await User.findByIdAndUpdate({_id:user},data)
+  await User.findByIdAndUpdate({_id:user},data,{
+    returnDocument:"after",
+    //this will run the vaildation whenever this update method will bbe called 
+    //remember you have to enable it  runValidators:true like this otherwise it will not update the existing validation  
+    runValidators:true
+  })
    res.send("update success")
-  }catch{
-  res.status(404).send("somthing went wrong");
+  }catch(err){
+   res.status(400).send("Update failed: " + err.message);
   }
 })
 
