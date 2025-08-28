@@ -18,7 +18,7 @@ app.use(express.json());
 */
 
 
-
+/*
 app.post("/signup", async (req, res) =>{
   //creating a new instance
   //remember use captail U
@@ -31,7 +31,80 @@ app.post("/signup", async (req, res) =>{
   }catch(err){
    res.status(400).send("Error saving the user");
   }
+});*/
+
+
+//try to find out by the one element
+//get user email
+app.get("/user", async (req, res) =>{
+
+  const userEmail = req.body.email;
+ 
+  try{
+    
+  const users =await User.find({email:userEmail});
+  if(users.length===0){
+    res.status(404).send("user nott found")
+  }else{res.send(users)}
+  
+  }catch(err){
+   res.status(400).send("Error saving the user");
+  }
 });
+
+//get by firsname
+app.get("/userr", async (req, res) => {
+  const firstName = req.body.firstName; // use query param
+
+  try {
+    const users = await User.find({ firstName: firstName });
+
+    if (users.length === 0) {
+      return res.status(404).send("User not found");
+    }
+
+    res.send(users);
+  } catch (err) {
+    console.error(err);
+    res.status(400).send("Error fetching the user");
+  }
+});
+
+//get all the feed 
+app.get ("/feed",async(req,res)=>{
+  try{
+const users= await User.find({})
+res.send(users)
+  }catch{
+res.status(404).send("somthing went wrong");
+  }
+})
+
+
+// delet a user by id 
+app.delete("/user",async(req,res)=>{
+  const userId = req.body.userId;
+  try{
+    const user= await User.findByIdAndDelete(userId)
+    res.send("deleted success")
+  }catch{
+res.status(404).send("somthing went wrong");
+  }
+})
+
+//update the data useingg patch 
+app.patch("/user",async(req,res)=>{
+  const user = req.body.userId;
+  const data = req.body;
+  console.log(data);
+  try{
+  await User.findByIdAndUpdate({_id:user},data)
+   res.send("update success")
+  }catch{
+  res.status(404).send("somthing went wrong");
+  }
+})
+
 
 connectDB()
 
