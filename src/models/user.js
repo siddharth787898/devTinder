@@ -1,6 +1,7 @@
 //const { default: mongoose } = require("mongoose")
 
 const mongoose =require("mongoose")
+const Validator = require("validator")
 
 const userSchema = new mongoose.Schema({
   firstName:{
@@ -15,7 +16,12 @@ const userSchema = new mongoose.Schema({
     lowercase:true,
     required:true,
     unique:true,
-    trim:true
+    trim:true,
+    validate(value){
+if(!Validator.isEmail(value)){
+  throw new Error("invalidate email"+value)
+}
+    }
   },
   password:{
     type: String,
@@ -39,7 +45,12 @@ const userSchema = new mongoose.Schema({
   },
   photoUrl:{
     type:String,
-    default:"https://www.mjunction.in/blog/pet-coke-effect-on-aluminium-cement-industry/dummy-2/"
+    default:"https://www.mjunction.in/blog/pet-coke-effect-on-aluminium-cement-industry/dummy-2/",
+      validate(value){
+if(!Validator.isURL(value)){
+  throw new Error("invalidate email"+value)
+}
+    }
   },
   skills:{
     type:[String]
