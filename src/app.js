@@ -84,6 +84,7 @@ res.status(404).send("somthing went wrong");
 // delet a user by id 
 app.delete("/user",async(req,res)=>{
   const userId = req.body.userId;
+  
   try{
     const user= await User.findByIdAndDelete(userId)
     res.send("deleted success")
@@ -93,19 +94,33 @@ res.status(404).send("somthing went wrong");
 })
 
 //update the data useingg patch 
-app.patch("/user",async(req,res)=>{
-  const user = req.body.userId;
+app.patch("/user/:userId",async(req,res)=>{
+  const userId = req.params.userId;
   const data = req.body;
-  console.log(data);
+
   try{
-  await User.findByIdAndUpdate({_id:user},data,{
-    returnDocument:"after",
+    const AllowedUpdate = [  "photoUrl","about","gender","skills","age"]
+    const isUpdateAllowed = Object.keys(data).every((k)=>
+    AllowedUpdate.includes(k)
+  );
+
+    if(!isUpdateAllowed){
+      throw new Error ("update is not allowed")
+    }
+    if (data.skills && data.skills.length > 10) {
+  throw new Error("Cannot have more than 10 skills");
+}
+  
+ const user = await User.findByIdAndUpdate({_id:userId},data,{
+    //returnDocument:"after",
+    new:true,//returnDocument:"after", write this thing like this 
+    
     //this will run the vaildation whenever this update method will bbe called 
     //remember you have to enable it  runValidators:true like this otherwise it will not update the existing validation  
     runValidators:true
   })
    res.send("update success")
-  }catch(err){
+}catch(err){
    res.status(400).send("Update failed: " + err.message);
   }
 })
