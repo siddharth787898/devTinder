@@ -2,73 +2,94 @@ const express = require("express");
 const connectDB =require("./config/database")
 const app = express();
 const User = require("./models/user")
+const {validateSignupData}= require("./utils/validation")
+const bcrypt = require("bcrypt")
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
-/*
-// app.post("/signup", async (req, res) =>{
-//   //creating a new instance
-//   const user = new User({
-//     firstName: "sachin",
-//     lastName: "tandulkar",
-//     email: "sachhin@kiyoma.com",
-//     password:"sachin@123"
-//    // i want this data to be send inside the api while i am making post call
-//    //is data ko api ke through sed krna hai aur server pr lana hai 
-//   });
-*/
+app.use(cookieParser());
+
 
 
 
 app.post("/signup", async (req, res) =>{
-  //creating a new instance
-  //remember use captail U
- const user = new User(req.body);
-
-
+ 
+ //what i am doing i am creating the password 
   try{
+    //vaidate the data 
+    // i am validating the signup data 
+    validateSignupData(req)
+// i am extracting this fileds out 
+    const{firstName, lastName, email,password}=req.body;
+
+    //encript the password 
+   const passwordHash= await bcrypt.hash(password,10)
+
+   const user = new User({
+    firstName, 
+    lastName, 
+    email,
+    password:passwordHash,})
+
   await user.save();
   res.send("user added successfully");
-  }catch(err){
-   res.status(400).send("Error saving the user");
+  }catch (err) {
+    console.error("Signup error:", err.message);
+    res.status(400).send(err.message);
   }
 });
 
+//post login.............................................................................
+const JWT_SECRET = "DEV@Tinder$790";
 
-//try to find out by the one element
-//get user email
-app.get("/user", async (req, res) =>{
-
-  const userEmail = req.body.email;
- 
+app.post("/login",async(req,res)=>{
   try{
-    
-  const users =await User.find({email:userEmail});
-  if(users.length===0){
-    res.status(404).send("user nott found")
-  }else{res.send(users)}
+     console.log("Req body:", req.body);
+const {email,password}= req.body;
+
+const user = await User.findOne({email:email})
+if(!user){
+  throw new Error("email is not present in DB")
+}
+const isPasswordValid = await bcrypt.compare(password,user.password);
+if(isPasswordValid){
+//over here i logic for cooki and everything
+const token = await jwt.sign({_id: user._id},JWT_SECRET);
+console.log(token)
+//creat the JWT token
+
+//and the token to cooki and send the response
+//as soon as i send the cooki to the user now my user will alredy atunticated its like temperory password
+
+res.cookie("token", token, { httpOnly: true })
+
+res.cookie("token",token)
+
+  res.send("login successfuly") 
+}else{
+  throw new Error ("password is not vaild")
+}
+}catch(error){
+  res.status(404).send("error"+error.message)
+}
+})
+
+
+
+
+//get profife
+app.get("/profile",async(req,res)=>{
+  const cookies = req.cookies;
   
-  }catch(err){
-   res.status(400).send("Error saving the user");
-  }
-});
+  const{token}= cookies;
+  //validate the token
+const decodedMassage = await jwt.verify(token,JWT_SECRET)
+console.log(decodedMassage)
+console.log(cookies)
+  res.send("Reading cookie");
+})
 
-//get by firsname
-app.get("/userr", async (req, res) => {
-  const firstName = req.body.firstName; // use query param
-
-  try {
-    const users = await User.find({ firstName: firstName });
-
-    if (users.length === 0) {
-      return res.status(404).send("User not found");
-    }
-
-    res.send(users);
-  } catch (err) {
-    console.error(err);
-    res.status(400).send("Error fetching the user");
-  }
-});
 
 //get all the feed 
 app.get ("/feed",async(req,res)=>{
@@ -114,9 +135,7 @@ app.patch("/user/:userId",async(req,res)=>{
  const user = await User.findByIdAndUpdate({_id:userId},data,{
     //returnDocument:"after",
     new:true,//returnDocument:"after", write this thing like this 
-    
-    //this will run the vaildation whenever this update method will bbe called 
-    //remember you have to enable it  runValidators:true like this otherwise it will not update the existing validation  
+     
     runValidators:true
   })
    res.send("update success")
