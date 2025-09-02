@@ -6,6 +6,7 @@ const {validateSignupData}= require("./utils/validation")
 const bcrypt = require("bcrypt")
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const {userAuth}= require("./middelware/auth");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -13,13 +14,15 @@ app.use(cookieParser());
 
 
 
+//...............post Signup.........................................
 app.post("/signup", async (req, res) =>{
  
  //what i am doing i am creating the password 
   try{
+      console.log("Incoming body:", req.body); 
     //vaidate the data 
     // i am validating the signup data 
-    validateSignupData(req)
+    validateSignupData(req.body)
 // i am extracting this fileds out 
     const{firstName, lastName, email,password}=req.body;
 
@@ -52,21 +55,18 @@ const user = await User.findOne({email:email})
 if(!user){
   throw new Error("email is not present in DB")
 }
-const isPasswordValid = await bcrypt.compare(password,user.password);
+const isPasswordValid = await user.validatePassword(password)
 if(isPasswordValid){
-//over here i logic for cooki and everything
-const token = await jwt.sign({_id: user._id},JWT_SECRET);
+
+const token = await user.getJWT()
 console.log(token)
-//creat the JWT token
 
-//and the token to cooki and send the response
-//as soon as i send the cooki to the user now my user will alredy atunticated its like temperory password
+res.cookie("token", token, {
+  expires: new Date(Date.now()+ 8 * 3600000),
+   httpOnly: true })
+//res.cookie("token",token)
 
-res.cookie("token", token, { httpOnly: true })
-
-res.cookie("token",token)
-
-  res.send("login successfuly") 
+res.send("login successfuly") 
 }else{
   throw new Error ("password is not vaild")
 }
@@ -75,74 +75,29 @@ res.cookie("token",token)
 }
 })
 
-
+//............................................................................
 
 
 //get profife
-app.get("/profile",async(req,res)=>{
-  const cookies = req.cookies;
-  
-  const{token}= cookies;
-  //validate the token
-const decodedMassage = await jwt.verify(token,JWT_SECRET)
-console.log(decodedMassage)
-console.log(cookies)
-  res.send("Reading cookie");
-})
+app.get("/profile",userAuth,async(req,res)=>{
 
+  try{ 
+const user = req.user
 
-//get all the feed 
-app.get ("/feed",async(req,res)=>{
-  try{
-const users= await User.find({})
-res.send(users)
-  }catch{
-res.status(404).send("somthing went wrong");
-  }
-})
-
-
-// delet a user by id 
-app.delete("/user",async(req,res)=>{
-  const userId = req.body.userId;
-  
-  try{
-    const user= await User.findByIdAndDelete(userId)
-    res.send("deleted success")
-  }catch{
-res.status(404).send("somthing went wrong");
-  }
-})
-
-//update the data useingg patch 
-app.patch("/user/:userId",async(req,res)=>{
-  const userId = req.params.userId;
-  const data = req.body;
-
-  try{
-    const AllowedUpdate = [  "photoUrl","about","gender","skills","age"]
-    const isUpdateAllowed = Object.keys(data).every((k)=>
-    AllowedUpdate.includes(k)
-  );
-
-    if(!isUpdateAllowed){
-      throw new Error ("update is not allowed")
-    }
-    if (data.skills && data.skills.length > 10) {
-  throw new Error("Cannot have more than 10 skills");
-}
-  
- const user = await User.findByIdAndUpdate({_id:userId},data,{
-    //returnDocument:"after",
-    new:true,//returnDocument:"after", write this thing like this 
-     
-    runValidators:true
-  })
-   res.send("update success")
+  res.send(user);
 }catch(err){
-   res.status(400).send("Update failed: " + err.message);
-  }
-})
+res.status(404).send("error"+err.message)
+}}
+ )
+
+ // sendconnectin resquest................................................................
+ app.post("/sendconnection",userAuth, async(req,res)=> {
+  const user = req.user
+  //sinding the connection request
+  console.log("Sending connection request")
+  res.send(user.firstName+"sent the connect request")
+ })
+
 
 
 connectDB()
