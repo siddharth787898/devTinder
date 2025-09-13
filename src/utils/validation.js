@@ -25,8 +25,31 @@ const validateSignupData = (body) => {   // 👈 expect body directly
   } else if (!validator.isEmail(email)) {
     throw new Error("Email is not valid");
   } else if (!validator.isStrongPassword(password)) {
-    throw new Error("Please enter a strong password");
+    throw new Error("Please enter a stronger password");
   }
-};
 
-module.exports = { validateSignupData };
+  return true; // ✅ success case
+}
+
+const validateEditProfileData = (req)=>{
+  const allowedEditFeilds = [
+    "firstName",
+    "lastName",
+    "email",
+    "age",
+    "gender",
+    "skills",
+    "about",
+    "photoUrl"
+  ];
+  //i will just loop through this req.body and check if all this thing are matching this critarea or not
+  //i will check that every field is present inside my allowedFields inculdes that field
+  const isEditAllowed = Object.keys(req.body).every((Field)=>
+  allowedEditFeilds.includes(Field)
+  );
+  return isEditAllowed;
+}
+
+module.exports = { validateSignupData,
+                   validateEditProfileData 
+                  };

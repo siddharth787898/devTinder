@@ -48,9 +48,9 @@ if(!user){
 }
     req.user = user;   // 👈 must be here
 next()
-}catch(Error){
-  res.status(404).send("Error"+Error.massage)
-}
+}catch (error) {
+    res.status(401).json({ error: error.message }); 
+  }
 }
   
 
