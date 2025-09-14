@@ -59,7 +59,7 @@ try{
       data
     });
   } catch (err) {
-    res.status(400).send("error: " + err.message); 
+    res.status(400).send("Error"+err.message)
   }
 });
 
@@ -108,4 +108,4 @@ requestRouter.post("/review/:status/:requestId",userAuth,async(req,res)=>{
   })
 
 
-module.exports = requestRouter;
+module.exports = requestRouter;  res.status(400).send("error: " + err.message);

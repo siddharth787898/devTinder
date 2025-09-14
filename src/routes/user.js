@@ -3,29 +3,8 @@ const { userAuth } = require('../middleware/auth');
 const { status } = require('express/lib/response');
 const userRouter = express.Router();
 const connectionRequest = require("../models/connectionRequest")
+const User = require("../models/user"); 
 
-// //get all the pending connectionRequest from loggedInuser
-// userRouter.get("/user/request/recive",userAuth,async(req,res)=>{
-//   try{
-//     //make sure the loggedinuser
-//     const loggedInuser = req.user
-
-//     //make get call form the DB and get all the connectionRequest of this loggedinUSer
-//   const requests = await connectionRequest.find({
-//   toUserId: loggedInUser._id,
-//   status: "interested"
-// }).populate("fromUserId", ["firstName", "lastName"]);
-
-// res.json({
-//   message:"DATA FATCHED SUCCESSFULLY",
-//   data: requests
-// })
-    
-    
-//   }catch(err){
-//     res.status(404).json({ error: err.message}) ;
-// }
-// })
 
 
 const USER_SAFE_DATA = "firstName lastName photoUrl age gender about skills"
@@ -49,9 +28,7 @@ userRouter.get("/request/receive", userAuth, async (req, res) => {
     res.status(404).json({ error: err.message });
   }
 });
-
-
-
+//.....................................................................................
 userRouter.get("/connection", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -71,6 +48,48 @@ userRouter.get("/connection", userAuth, async (req, res) => {
     res.json({ data });
   } catch (err) {
     res.status(400).send("error: " + err.message);
+  }
+});
+//.....................................................................................
+
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const page = parseInt(req.query.page) ||1;
+    let limit = parseInt(req.query.limit)||10;
+    limit = limit>50 ? 50 : limit;
+    const skip = (page-1)*limit;
+
+    // find all the connection requests (sent + received)
+    const requests = await connectionRequest.find({
+      $or: [
+        { fromUserId: loggedInUser._id }, // requests I sent
+        { toUserId: loggedInUser._id }    // requests I received
+      ]
+    }).select("fromUserId toUserId");
+
+    // store all userIds I should hide from the feed
+    const hideUserFromFeed = new Set();
+    requests.forEach((req) => {
+      hideUserFromFeed.add(req.fromUserId.toString());
+      hideUserFromFeed.add(req.toUserId.toString());
+    });
+
+    // find all users not in hideUserFromFeed and not me
+    const users = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUserFromFeed) } },
+        { _id: { $ne: loggedInUser._id } }
+      ]
+    })
+    .select(USER_SAFE_DATA)
+    .skip(skip)
+    .limit(limit);
+
+    res.send({ data:users});
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
   }
 });
 
