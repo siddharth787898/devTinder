@@ -1,7 +1,5 @@
-const mongoose = require('mongoose');
-const User = require('./user');
-// const { schema } = require('./user')
-// const { type } = require('express/lib/response')
+import mongoose from 'mongoose';
+import User from './user.js';
 
 const connectionRequestSchema = mongoose.Schema({
 
@@ -40,4 +38,4 @@ const connectionRequestModel = mongoose.model(
   connectionRequestSchema   // ✅ fixed name here too
 );
 
-module.exports = connectionRequestModel;
+export default connectionRequestModel; 

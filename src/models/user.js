@@ -1,9 +1,8 @@
 //const { default: mongoose } = require("mongoose")
-
-const mongoose =require("mongoose")
-const Validator = require("validator")
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken");
+import mongoose from "mongoose";
+import Validator from "validator";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = "DEV@Tinder$790";
 
@@ -92,5 +91,4 @@ userSchema.methods.getJWT = async function () {
 }
 
 const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+export default User;

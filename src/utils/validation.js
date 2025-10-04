@@ -1,23 +1,8 @@
-// const validator = require("validator");
-
-// const validateSignupData = (req) => {
-//   const { firstName, lastName, email, password } = req.body;
-
-//   if (!firstName || !lastName) {
-//     throw new Error("Name is not valid");
-//   } else if (!validator.isEmail(email)) {
-//     throw new Error("Email is not valid");
-//   } else if (!validator.isStrongPassword(password)) {
-//     throw new Error("Please enter a strong password");
-//   }
-// };
-
-// module.exports = { validateSignupData };
+import validator from "validator";
 
 const JWT_SECRET = "DEV@Tinder$790";
-const validator = require("validator");
 
-const validateSignupData = (body) => {   // 👈 expect body directly
+export const validateSignupData = (body) => {
   const { firstName, lastName, email, password } = body;
 
   if (!firstName || !lastName) {
@@ -28,10 +13,10 @@ const validateSignupData = (body) => {   // 👈 expect body directly
     throw new Error("Please enter a stronger password");
   }
 
-  return true; // ✅ success case
-}
+  return true;
+};
 
-const validateEditProfileData = (req)=>{
+export const validateEditProfileData = (body) => {
   const allowedEditFeilds = [
     "firstName",
     "lastName",
@@ -40,16 +25,12 @@ const validateEditProfileData = (req)=>{
     "gender",
     "skills",
     "about",
-    "photoUrl"
+    "photoUrl",
   ];
-  //i will just loop through this req.body and check if all this thing are matching this critarea or not
-  //i will check that every field is present inside my allowedFields inculdes that field
-  const isEditAllowed = Object.keys(req.body).every((Field)=>
-  allowedEditFeilds.includes(Field)
-  );
-  return isEditAllowed;
-}
 
-module.exports = { validateSignupData,
-                   validateEditProfileData 
-                  };
+  const isEditAllowed = Object.keys(body).every((field) =>
+    allowedEditFeilds.includes(field)
+  );
+
+  return isEditAllowed;
+};
